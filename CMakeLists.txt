@@ -10,6 +10,17 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+            STRING "Choose the type of build." FORCE)
+    # Set the possible values of build type for cmake-gui
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+            "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
 
 
 project(RayTracing_OpenGLViewer VERSION 0.1.0 LANGUAGES CXX)
@@ -55,7 +66,6 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/glew/build/cmake/CMakeLists.txt"
 endif()
 
 #GLFW
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
@@ -68,21 +78,17 @@ add_subdirectory("extern/glfw")
 add_subdirectory("extern/glew")
 add_subdirectory("extern/glm")
 
-set(default_build_type "Release")
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
-    set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
-            STRING "Choose the type of build." FORCE)
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-            "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
+include_directories("extern/glfw/include/")
+include_directories("extern/glew/include/")
+include_directories("extern/glm/")
+
 
 
 add_library(RayTracing_OpenGLViewer_lib include/RayTracing_OpenGLViewer.hpp)
 target_include_directories(RayTracing_OpenGLViewer_lib PUBLIC include)
 target_compile_features(RayTracing_OpenGLViewer_lib PUBLIC cxx_std_14)
 set_target_properties(RayTracing_OpenGLViewer_lib PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(RayTracing_OpenGLViewer_lib glfw ${GLFW_LIBRARIES})
 
 add_executable(RayTracing_OpenGLViewer_exe src/RayTracing_OpenGLViewer.cpp)
 target_link_libraries(RayTracing_OpenGLViewer_exe PUBLIC RayTracing_OpenGLViewer_lib)
