@@ -62,6 +62,10 @@ set(GLFW_INSTALL OFF CACHE BOOL "")
 #GLEW
 set(BUILD_UTILS OFF CACHE BOOL "")
 
+#GLM
+set(GLM_TEST_ENABLE OFF CACHE BOOL "")
+
+
 add_subdirectory("extern/glfw")
 add_subdirectory("extern/glew")
 add_subdirectory("extern/glm")
