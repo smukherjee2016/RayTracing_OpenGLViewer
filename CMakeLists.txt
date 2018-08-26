@@ -12,7 +12,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(default_build_type "Release")
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
+    if (NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+    endif()
+endif()
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
     set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
@@ -25,23 +30,6 @@ endif()
 
 project(RayTracing_OpenGLViewer VERSION 0.1.0 LANGUAGES CXX)
 
-if(CMAKE_VERSION VERSION_GREATER 3.6)
-    # Add clang-tidy if available
-    option(CLANG_TIDY_FIX "Perform fixes for Clang-Tidy" OFF)
-    find_program(
-            CLANG_TIDY_EXE
-            NAMES "clang-tidy"
-            DOC "Path to clang-tidy executable"
-    )
-
-    if(CLANG_TIDY_EXE)
-        if(CLANG_TIDY_FIX)
-            set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}" "-fix")
-        else()
-            set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
-        endif()
-    endif()
-endif()
 
 
 find_package(Git QUIET)
