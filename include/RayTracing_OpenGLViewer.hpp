@@ -2,9 +2,7 @@
 
 #include <iostream>
 
-// Include GLEW. Include it before gl.h and glfw3.h.
-#include <GL/glew.h>
-
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #define GLM_FORCE_RADIANS
@@ -59,8 +57,8 @@ private:
     const glm::vec3 lookingAtPos = glm::vec3(0.0f, 0.0f, 0.0f);
     const glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
     const float fOV = glm::radians(45.0f);
-    const float near = 0.1f;
-    const float far = 10.0f;
+    float nearPoint = 0.1;
+    float farPoint = 10.0f;
     const float defaultAspectRatio = static_cast<float>(WIDTH) / HEIGHT;
     const float moveSensitivity = 0.05f;
 
@@ -104,7 +102,7 @@ private:
     void setDefaultCamera() {
         cameraPosition.model = glm::mat4(1.0f);
         cameraPosition.view = glm::lookAt(cameraPos, lookingAtPos, upVector);
-        cameraPosition.proj = glm::perspective(fOV, defaultAspectRatio, near, far);
+        cameraPosition.proj = glm::perspective(fOV, defaultAspectRatio, nearPoint, farPoint);
         //cameraPosition.proj[1][1] *= -1; //Readjust for Vulkan
 
     }
@@ -212,11 +210,8 @@ private:
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "RayTracing_OpenGLViewer", nullptr, nullptr);
 		glfwMakeContextCurrent(window);
-		glewExperimental = true;
 
-		if (glewInit != GLEW_OK) {
-			std::runtime_error("Failed to initialize GLEW!");
-		}
+
 		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
         populateVertices();
@@ -228,16 +223,8 @@ private:
     void mainLoop() {
         glfwSetKeyCallback(window, keyCallback);
         while (!glfwWindowShouldClose(window)) {
-			// Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
-			glClear(GL_COLOR_BUFFER_BIT);
-
-			// Draw nothing, see you in tutorial 2 !
-
-			// Swap buffers
-			glfwSwapBuffers(window);
-
-            //glfwWaitEventsTimeout(1.0);
-            glfwWaitEvents();
+		
+			glfwWaitEvents();
             updateCameraPosition(NONE_NOTHING);
             drawFrame();
         }
