@@ -102,8 +102,7 @@ public:
 		}
 };
 
-static Shader ourShader;
-unsigned int texture;
+
 
 class RayTracingOpenGLViewer {
 
@@ -125,6 +124,11 @@ public:
         cleanup();
     }
 
+	void setImage(const std::vector<glm::vec3> pixels)
+	{
+		inputPixels =  std::move(pixels);
+	}
+
 private:
     //Right-handed coordinate system, same as GL_MODELVIEW
     //http://www.songho.ca/opengl/files/gl_anglestoaxes01.png
@@ -138,6 +142,8 @@ private:
         NONE_NOTHING
     };
 
+	Shader ourShader;
+	unsigned int texture;
 	std::vector<glm::vec3> inputPixels;
     const int WIDTH = 1280;
     const int HEIGHT = 720;

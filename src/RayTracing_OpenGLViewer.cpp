@@ -13,6 +13,7 @@ int main() {
 			inputPixels.emplace_back(glm::vec3((float)i / 255, (float)j / 255, 0));
 		}
 	}
+	app->setImage(inputPixels);
 
     try {
         app->run();
