@@ -173,13 +173,9 @@ private:
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
-
 		// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		// We can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-		// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-		glBindVertexArray(0);
 
 		//Texture generation
 		glGenTextures(1, &texture);
@@ -246,14 +242,14 @@ private:
     void mainLoop() {
         glfwSetKeyCallback(window, keyCallback);
         while (!glfwWindowShouldClose(window)) {
-		
+		//Implement renderer here
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, inputPixels.data());
 			glBindTexture(GL_TEXTURE_2D, texture);
 			ourShader.use();
-			glBindVertexArray(VAO);
+			
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 
 			glfwWaitEventsTimeout(1.0);
