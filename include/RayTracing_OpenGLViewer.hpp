@@ -323,7 +323,7 @@ private:
         if (width == 0 || height == 0) return;
 
         auto* app = reinterpret_cast<RayTracingOpenGLViewer*>(glfwGetWindowUserPointer(window));
-        app->recreateSwapChain();
+        app->resizeView(width, height);
 
     }
 
@@ -391,8 +391,8 @@ private:
 
     }
 
-    void recreateSwapChain() {
-
+    void resizeView(int width, int height) {
+		glViewport(0, 0, width, height);
     }
 
 };
