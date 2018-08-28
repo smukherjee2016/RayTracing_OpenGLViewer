@@ -42,8 +42,6 @@ public:
 	{
 		// 2. compile shaders
 		unsigned int vertex, fragment;
-		int success;
-		char infoLog[512];
 
 		// vertex Shader
 		vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -191,7 +189,7 @@ private:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, inputPixels.data());
+		
 
     }
 
@@ -242,6 +240,7 @@ private:
         createBaseTriangleAndTexture();
         glfwSetWindowUserPointer(window, this);
         glfwSetWindowSizeCallback(window, RayTracingOpenGLViewer::onWindowResized);
+		
     }
 	
     void mainLoop() {
@@ -251,12 +250,13 @@ private:
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, inputPixels.data());
 			glBindTexture(GL_TEXTURE_2D, texture);
 			ourShader.use();
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 
-			glfwWaitEvents();
+			glfwWaitEventsTimeout(1.0);
 			glfwSwapBuffers(window);
 
         }
