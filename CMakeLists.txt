@@ -11,12 +11,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
     endif()
 endif()
+
+SET(default_build_type "Release")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -59,6 +62,7 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
 set(GLFW_INSTALL OFF CACHE BOOL "")
 
+
 #GLEW
 set(BUILD_UTILS OFF CACHE BOOL "")
 
@@ -78,7 +82,6 @@ include_directories("extern/glm/")
 
 add_library(RayTracing_OpenGLViewer_lib include/RayTracing_OpenGLViewer.hpp)
 target_include_directories(RayTracing_OpenGLViewer_lib PUBLIC include)
-target_compile_features(RayTracing_OpenGLViewer_lib PUBLIC cxx_std_14)
 set_target_properties(RayTracing_OpenGLViewer_lib PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(RayTracing_OpenGLViewer_lib glfw ${GLFW_LIBRARIES})
 
