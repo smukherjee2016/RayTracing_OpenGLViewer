@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
     if (NOT CMAKE_BUILD_TYPE)
@@ -80,10 +80,13 @@ include_directories("extern/glm/")
 
 
 
-add_library(RayTracing_OpenGLViewer_lib include/RayTracing_OpenGLViewer.hpp)
-target_include_directories(RayTracing_OpenGLViewer_lib PUBLIC include)
-set_target_properties(RayTracing_OpenGLViewer_lib PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(RayTracing_OpenGLViewer_lib glfw ${GLFW_LIBRARIES})
+add_library(RayTracing_OpenGLViewer_lib INTERFACE)
+target_sources( RayTracing_OpenGLViewer_lib
+        INTERFACE
+        "${CMAKE_CURRENT_LIST_DIR}/include/RayTracing_OpenGLViewer.hpp"
+)
+target_include_directories(RayTracing_OpenGLViewer_lib INTERFACE include/)
+target_link_libraries(RayTracing_OpenGLViewer_lib INTERFACE glfw ${GLFW_LIBRARIES})
 
 add_executable(RayTracing_OpenGLViewer_exe src/RayTracing_OpenGLViewer.cpp)
 target_link_libraries(RayTracing_OpenGLViewer_exe PUBLIC RayTracing_OpenGLViewer_lib)
