@@ -18,18 +18,21 @@ static thread_local std::uniform_real_distribution<double> rando(-1.0f, 1.0f);
 
 const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
-"out vec4 vertexColor;\n"
+"out vec2 xyPosition;\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos, 1.0);\n"
-"vertexColor = vec4(1.0 - (aPos.x + 1.0)/2.0,1.0 - (aPos.y + 1.0)/2.0, 0.0, 1.0);\n"
+" xyPosition = vec2((aPos.x + 1.0)/2.0, (aPos.y + 1.0)/2.0);\n"
+"//vertexColor = vec4(1.0 - (aPos.x + 1.0)/2.0,1.0 - (aPos.y + 1.0)/2.0, 0.0, 1.0);\n"
 "}\0";
 const char *fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
-"in vec4 vertexColor;\n"
+"in vec2 xyPosition;\n"
+"uniform sampler2D ourTexture;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vertexColor;\n"
+"//if(xyPosition.x < 0.6 && xyPosition.x > 0.4)\n"
+"   FragColor = texture(ourTexture, xyPosition);\n"
 "}\n\0";
 
 class Shader
@@ -117,10 +120,12 @@ public:
 };
 
 static Shader ourShader;
+unsigned int texture;
 
 class RayTracingOpenGLViewer {
 
     static RayTracingOpenGLViewer *s_instance;
+	std::vector<glm::vec3> inputPixels;
 
 public:
 
@@ -225,7 +230,23 @@ private:
 		// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
 		glBindVertexArray(0);
 
+		//Texture generation
+		
+		for (int i = 0; i <= 255; i++) {
+			for (int j = 0; j <= 255; j++) {
+				inputPixels.emplace_back(glm::vec3((float)i/255,(float)j/255,0));
+			}
+		}
 
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, inputPixels.data());
+		glGenerateMipmap(GL_TEXTURE_2D);
 
     }
 
@@ -363,6 +384,8 @@ private:
 		
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
+			
+			glBindTexture(GL_TEXTURE_2D, texture);
 			ourShader.use();
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
