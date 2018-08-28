@@ -201,10 +201,23 @@ private:
 
     void initWindow()
     {
-        glfwInit();
+		if (!glfwInit()) {
+			std::runtime_error("Failed to initialize GLFW!");
+		}
+
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL 
+
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "RayTracing_OpenGLViewer", nullptr, nullptr);
+		glfwMakeContextCurrent(window);
+		glewExperimental = true;
+
+		if (glewInit != GLEW_OK) {
+			std::runtime_error("Failed to initialize GLEW!");
+		}
+		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
         populateVertices();
         setDefaultCamera();
@@ -215,6 +228,14 @@ private:
     void mainLoop() {
         glfwSetKeyCallback(window, keyCallback);
         while (!glfwWindowShouldClose(window)) {
+			// Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			// Draw nothing, see you in tutorial 2 !
+
+			// Swap buffers
+			glfwSwapBuffers(window);
+
             //glfwWaitEventsTimeout(1.0);
             glfwWaitEvents();
             updateCameraPosition(NONE_NOTHING);
