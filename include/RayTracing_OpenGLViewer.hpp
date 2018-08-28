@@ -200,6 +200,7 @@ private:
     void initWindow()
     {
 		if (!glfwInit()) {
+			glfwTerminate();
 			std::runtime_error("Failed to initialize GLFW!");
 		}
 
@@ -211,8 +212,11 @@ private:
         window = glfwCreateWindow(WIDTH, HEIGHT, "RayTracing_OpenGLViewer", nullptr, nullptr);
 		glfwMakeContextCurrent(window);
 
-
 		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+			std::runtime_error("Failed to initialize GLAD");
+		}
 
         populateVertices();
         setDefaultCamera();
@@ -225,6 +229,7 @@ private:
         while (!glfwWindowShouldClose(window)) {
 		
 			glfwWaitEvents();
+			glfwSwapBuffers(window);
             updateCameraPosition(NONE_NOTHING);
             drawFrame();
         }
