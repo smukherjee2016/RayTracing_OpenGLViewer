@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -14,18 +16,104 @@
 static thread_local std::mt19937 rng;
 static thread_local std::uniform_real_distribution<double> rando(-1.0f, 1.0f);
 
-const char * vertexShaderSource = "#version 330 core\n"
+const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\0";
-const char * fragmentShaderSource = "#version 330 core\n"
+const char *fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
 "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "}\n\0";
+
+class Shader
+{
+public:
+	// the program ID
+	unsigned int ID;
+
+	// utility uniform functions
+	void setBool(const std::string &name, bool value) const
+	{
+		glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+	}
+	void setInt(const std::string &name, int value) const
+	{
+		glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+	}
+	void setFloat(const std::string &name, float value) const
+	{
+		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+	}
+
+	void createProgram(const char* vShaderCode, const char* fShaderCode)
+	{
+		// 2. compile shaders
+		unsigned int vertex, fragment;
+		int success;
+		char infoLog[512];
+
+		// vertex Shader
+		vertex = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(vertex, 1, &vShaderCode, NULL);
+		glCompileShader(vertex);
+		checkCompileErrors(vertex, "VERTEX");
+
+		// fragment Shader
+		fragment = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(fragment, 1, &fShaderCode, NULL);
+		glCompileShader(fragment);
+		checkCompileErrors(fragment, "FRAGMENT");
+
+		// shader Program
+		ID = glCreateProgram();
+		glAttachShader(ID, vertex);
+		glAttachShader(ID, fragment);
+		glLinkProgram(ID);
+		checkCompileErrors(ID, "PROGRAM");
+
+		// delete the shaders as they're linked into our program now and no longer necessery
+		glDeleteShader(vertex);
+		glDeleteShader(fragment);
+	}
+
+	void use()
+	{
+		glUseProgram(ID);
+	}
+
+	private:
+		// utility function for checking shader compilation/linking errors.
+		// ------------------------------------------------------------------------
+		void checkCompileErrors(unsigned int shader, std::string type)
+		{
+			int success;
+			char infoLog[1024];
+			if (type != "PROGRAM")
+			{
+				glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+				if (!success)
+				{
+					glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+					std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+				}
+			}
+			else
+			{
+				glGetProgramiv(shader, GL_LINK_STATUS, &success);
+				if (!success)
+				{
+					glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+					std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+				}
+			}
+		}
+};
+
+static Shader ourShader;
 
 class RayTracingOpenGLViewer {
 
@@ -63,7 +151,6 @@ private:
     const int WIDTH = 1280;
     const int HEIGHT = 720;
 	unsigned int VBO, VAO;
-	int shaderProgram;
 
     GLFWwindow* window{};
 
@@ -114,46 +201,7 @@ private:
 		0.0f,  4.0f, 0.0f
 		};
 
-		// build and compile our shader program
-	// ------------------------------------
-	// vertex shader
-		int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-		glCompileShader(vertexShader);
-		// check for shader compile errors
-		int success;
-		char infoLog[512];
-		glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-		}
-		// fragment shader
-		int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-		glCompileShader(fragmentShader);
-		// check for shader compile errors
-		glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-		}
-		// link shaders
-		shaderProgram = glCreateProgram();
-		glAttachShader(shaderProgram, vertexShader);
-		glAttachShader(shaderProgram, fragmentShader);
-		glLinkProgram(shaderProgram);
-		// check for linking errors
-		glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-		if (!success) {
-			glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-		}
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
-
+		 ourShader.createProgram(vertexShaderSource, fragmentShaderSource);
 
 		
 		glGenVertexArrays(1, &VAO);
@@ -305,14 +353,14 @@ private:
         glfwSetWindowUserPointer(window, this);
         glfwSetWindowSizeCallback(window, RayTracingOpenGLViewer::onWindowResized);
     }
-
+	
     void mainLoop() {
         glfwSetKeyCallback(window, keyCallback);
         while (!glfwWindowShouldClose(window)) {
 		
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
-			glUseProgram(shaderProgram);
+			ourShader.use();
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 
