@@ -13,9 +13,6 @@
 
 #include <random>
 
-static thread_local std::mt19937 rng;
-static thread_local std::uniform_real_distribution<double> rando(-1.0f, 1.0f);
-
 const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "out vec2 xyPosition;\n"
@@ -40,20 +37,6 @@ class Shader
 public:
 	// the program ID
 	unsigned int ID;
-
-	// utility uniform functions
-	void setBool(const std::string &name, bool value) const
-	{
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
-	}
-	void setInt(const std::string &name, int value) const
-	{
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
-	}
-	void setFloat(const std::string &name, float value) const
-	{
-		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
-	}
 
 	void createProgram(const char* vShaderCode, const char* fShaderCode)
 	{
@@ -125,7 +108,7 @@ unsigned int texture;
 class RayTracingOpenGLViewer {
 
     static RayTracingOpenGLViewer *s_instance;
-	std::vector<glm::vec3> inputPixels;
+	
 
 public:
 
@@ -138,7 +121,6 @@ public:
 
     void run() {
         initWindow();
-        initOpenGL();
         mainLoop();
         cleanup();
     }
@@ -156,52 +138,17 @@ private:
         NONE_NOTHING
     };
 
+	std::vector<glm::vec3> inputPixels;
     const int WIDTH = 1280;
     const int HEIGHT = 720;
 	unsigned int VBO, VAO;
 
     GLFWwindow* window{};
-
-    // TODO(): Put these in a camera class later
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    const glm::vec3 lookingAtPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    const glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
-    const float fOV = glm::radians(45.0f);
-    float nearPoint = 0.1;
-    float farPoint = 10.0f;
-    const float defaultAspectRatio = static_cast<float>(WIDTH) / HEIGHT;
-    const float moveSensitivity = 0.05f;
-
-    struct UniformBufferObject {
-        glm::mat4 model;
-        glm::mat4 view;
-        glm::mat4 proj;
-    } cameraPosition{};
-
-    struct Vertex {
-        glm::vec3 pos;
-        glm::vec3 color;
-        glm::vec2 texCoord;
-    };
-
-    std::vector<Vertex> vertices;
-
-
-    void populateVertices() {
+    
+    void createBaseTriangleAndTexture() {
 
         int width, height;
         glfwGetWindowSize(window, &width, &height);
-        vertices = {
-        	 {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-        	{{0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-        	{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-        };
-        /*vertices = {
-                { { -0.5f, -0.5f },{ 1.0f, 0.0f, 0.0f },{ 1.0f, 0.0f } },
-                { { 0.5f, -0.5f },{ 0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f } },
-                { { 0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f },{ 0.0f, 1.0f } },
-                { { -0.5f, 0.5f },{ 1.0f, 1.0f, 1.0f },{ 1.0f, 1.0f } }
-        };*/
 
 		float oglVertices[] = {
 		-4.0f, -4.0f, 0.0f,
@@ -209,7 +156,7 @@ private:
 		0.0f,  4.0f, 0.0f
 		};
 
-		 ourShader.createProgram(vertexShaderSource, fragmentShaderSource);
+		ourShader.createProgram(vertexShaderSource, fragmentShaderSource);
 
 		
 		glGenVertexArrays(1, &VAO);
@@ -226,18 +173,11 @@ private:
 		// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+		// We can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
 		// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
 		glBindVertexArray(0);
 
 		//Texture generation
-		
-		for (int i = 0; i <= 255; i++) {
-			for (int j = 0; j <= 255; j++) {
-				inputPixels.emplace_back(glm::vec3((float)i/255,(float)j/255,0));
-			}
-		}
-
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -246,62 +186,10 @@ private:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, inputPixels.data());
-		glGenerateMipmap(GL_TEXTURE_2D);
 
     }
 
-    void setDefaultCamera() {
-        cameraPosition.model = glm::mat4(1.0f);
-        cameraPosition.view = glm::lookAt(cameraPos, lookingAtPos, upVector);
-        cameraPosition.proj = glm::perspective(fOV, defaultAspectRatio, nearPoint, farPoint);
-        //cameraPosition.proj[1][1] *= -1; //Readjust for Vulkan
-
-    }
-
-    void updateCameraPosition(moveDirection inputDirection) {
-        switch (inputDirection) {
-
-            case LEFT_X_NEGATIVE:
-                cameraPos = cameraPos - glm::vec3(moveSensitivity, 0.0f, 0.0f);
-                cameraPosition.view = glm::lookAt(cameraPos, lookingAtPos, upVector);
-                break;
-
-            case RIGHT_X_POSITIVE:
-                cameraPos = cameraPos + glm::vec3(moveSensitivity, 0.0f, 0.0f);
-                cameraPosition.view = glm::lookAt(cameraPos, lookingAtPos, upVector);
-                break;
-
-            case UP_Y_POSITIVE:
-                cameraPos = cameraPos + glm::vec3(0.0f, moveSensitivity, 0.0f);
-                cameraPosition.view = glm::lookAt(cameraPos, lookingAtPos, upVector);
-                break;
-
-            case DOWN_Y_NEGATIVE:
-                cameraPos = cameraPos - glm::vec3(0.0f, moveSensitivity, 0.0f);
-                cameraPosition.view = glm::lookAt(cameraPos, lookingAtPos, upVector);
-                break;
-
-            case FORWARD_Z_NEGATIVE:
-                cameraPos = cameraPos - glm::vec3(0.0f, 0.0f, moveSensitivity);
-                cameraPosition.view = glm::lookAt(cameraPos, lookingAtPos, upVector);
-                break;
-
-            case BACKWARD_Z_POSITIVE:
-                cameraPos = cameraPos + glm::vec3(0.0f, 0.0f, moveSensitivity);
-                cameraPosition.view = glm::lookAt(cameraPos, lookingAtPos, upVector);
-                break;
-
-            case NONE_NOTHING: //For updating camera position with proper swapChainExtent values
-                //cameraPosition.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width /  static_cast<float>(swapChainExtent.height), 0.1f, 10.0f);
-                cameraPosition.proj[1][1] *= -1;
-                break;
-            default:
-                break;
-        }
-
-
-
-    }
+    
 
     static void keyCallback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods) {
         if(action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -309,30 +197,7 @@ private:
                 case GLFW_KEY_ESCAPE:
                     glfwSetWindowShouldClose(window, GLFW_TRUE);
                     break;
-                case GLFW_KEY_W:
-                    getInstance()->updateCameraPosition(FORWARD_Z_NEGATIVE);
-                    break;
-
-                case GLFW_KEY_A:
-                    getInstance()->updateCameraPosition(LEFT_X_NEGATIVE);
-                    break;
-
-                case GLFW_KEY_S:
-                    getInstance()->updateCameraPosition(BACKWARD_Z_POSITIVE);
-                    break;
-
-                case GLFW_KEY_D:
-                    getInstance()->updateCameraPosition(RIGHT_X_POSITIVE);
-                    break;
-
-                case GLFW_KEY_Q:
-                    getInstance()->updateCameraPosition(UP_Y_POSITIVE);
-                    break;
-
-                case GLFW_KEY_E:
-                    getInstance()->updateCameraPosition(DOWN_Y_NEGATIVE);
-                    break;
-
+                
                 default:
                     break;
             }
@@ -351,7 +216,6 @@ private:
     void initWindow()
     {
 		if (!glfwInit()) {
-			glfwTerminate();
 			std::runtime_error("Failed to initialize GLFW!");
 		}
 		
@@ -362,18 +226,14 @@ private:
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); 
 #endif	
 		
-
         window = glfwCreateWindow(WIDTH, HEIGHT, "RayTracing_OpenGLViewer", nullptr, nullptr);
 		glfwMakeContextCurrent(window);
-
-		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 			std::runtime_error("Failed to initialize GLAD");
 		}
 
-        populateVertices();
-        setDefaultCamera();
+        createBaseTriangleAndTexture();
         glfwSetWindowUserPointer(window, this);
         glfwSetWindowSizeCallback(window, RayTracingOpenGLViewer::onWindowResized);
     }
@@ -392,13 +252,8 @@ private:
 
 			glfwWaitEvents();
 			glfwSwapBuffers(window);
-            updateCameraPosition(NONE_NOTHING);
-            drawFrame();
+
         }
-
-    }
-
-    void initOpenGL() {
 
     }
 
@@ -407,10 +262,6 @@ private:
         glfwDestroyWindow(window);
 
         glfwTerminate();
-
-    }
-
-    void drawFrame() {
 
     }
 
