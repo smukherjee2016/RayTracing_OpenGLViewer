@@ -71,9 +71,7 @@ set(GLM_TEST_ENABLE OFF CACHE BOOL "")
 add_subdirectory("extern/glfw")
 add_subdirectory("extern/glm")
 
-include_directories("${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include/")
-include_directories("${CMAKE_CURRENT_LIST_DIR}/extern/glad/include/")
-include_directories("${CMAKE_CURRENT_LIST_DIR}/extern/glm/")
+
 
 set(GLAD "${CMAKE_CURRENT_LIST_DIR}/extern/glad/include/glad/glad.h"
 		 "${CMAKE_CURRENT_LIST_DIR}/extern/glad/include/KHR/khrplatform.h"
@@ -86,6 +84,9 @@ target_sources( RayTracing_OpenGLViewer_lib
         "${CMAKE_CURRENT_LIST_DIR}/include/RayTracing_OpenGLViewer.hpp"
         ${GLAD}
 )
+target_include_directories(RayTracing_OpenGLViewer_lib INTERFACE "${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include/")
+target_include_directories(RayTracing_OpenGLViewer_lib INTERFACE "${CMAKE_CURRENT_LIST_DIR}/extern/glad/include/")
+target_include_directories(RayTracing_OpenGLViewer_lib INTERFACE "${CMAKE_CURRENT_LIST_DIR}/extern/glm/")
 #set_target_properties(RayTracing_OpenGLViewer_lib PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(RayTracing_OpenGLViewer_lib INTERFACE include/)
 target_link_libraries(RayTracing_OpenGLViewer_lib INTERFACE glfw ${GLFW_LIBRARIES})
