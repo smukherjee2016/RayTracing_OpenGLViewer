@@ -51,8 +51,7 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     endif()
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/glew/build/cmake/CMakeLists.txt"
-        OR NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/glfw/CMakeLists.txt"
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/glfw/CMakeLists.txt"
             OR NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/glm/CMakeLists.txt")
         message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif()
@@ -64,16 +63,12 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
 set(GLFW_INSTALL OFF CACHE BOOL "")
 
 
-#GLEW
-set(BUILD_UTILS OFF CACHE BOOL "")
-
 #GLM
 set(GLM_TEST_ENABLE OFF CACHE BOOL "")
 
 
 
 add_subdirectory("extern/glfw")
-add_subdirectory("extern/glew")
 add_subdirectory("extern/glm")
 
 include_directories("extern/glfw/include/")
