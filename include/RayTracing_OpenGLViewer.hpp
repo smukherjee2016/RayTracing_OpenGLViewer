@@ -15,10 +15,6 @@
 #include <chrono>
 #include <thread>
 
-static thread_local std::mt19937 rng;
-static thread_local std::uniform_real_distribution<double> rando(0.0f, 1.0f);
-
-
 const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "out vec2 xyPosition;\n"
@@ -122,9 +118,9 @@ public:
         return s_instance;
     }
 
-    void run() {
+    void run(std::function<std::vector<glm::vec3>()> createImage = nullptr) {
         initWindow();
-        mainLoop();
+        mainLoop(createImage);
         cleanup();
     }
 
@@ -245,23 +241,18 @@ private:
 		
     }
 	
-    void mainLoop() {
+    void mainLoop(std::function<std::vector<glm::vec3>()> createImage) {
 
         glfwSetKeyCallback(window, keyCallback);
         while (!glfwWindowShouldClose(window)) {
-		//Implement renderer here
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
-#if _DEBUG
-			std::vector<glm::vec3> pixels;
-			for (int i = 0; i <= 255; i++) {
-				for (int j = 0; j <= 255; j++) {
-					pixels.emplace_back(glm::vec3(rando(rng), rando(rng), rando(rng)));
-				}
+			//Run the createImage function here from outside and then show it on the screen
+			if (createImage != nullptr) {
+				std::vector<glm::vec3> ret = createImage();
+				setImage(ret);
 			}
-			setImage(pixels);
-#endif // DEBUG
 
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, inputPixels.data());
 			glBindTexture(GL_TEXTURE_2D, texture);
