@@ -12,6 +12,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <random>
+#include <chrono>
+#include <thread>
+
+static thread_local std::mt19937 rng;
+static thread_local std::uniform_real_distribution<double> rando(0.0f, 1.0f);
+
 
 const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -124,7 +130,8 @@ public:
 
 	void setImage(const std::vector<glm::vec3> pixels)
 	{
-		inputPixels =  std::move(pixels);
+		inputPixels.clear();
+		inputPixels = std::move(pixels);
 	}
 
 private:
@@ -184,7 +191,6 @@ private:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
 		
 
     }
@@ -240,12 +246,23 @@ private:
     }
 	
     void mainLoop() {
+
         glfwSetKeyCallback(window, keyCallback);
         while (!glfwWindowShouldClose(window)) {
 		//Implement renderer here
 			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
-			
+
+#if _DEBUG
+			std::vector<glm::vec3> pixels;
+			for (int i = 0; i <= 255; i++) {
+				for (int j = 0; j <= 255; j++) {
+					pixels.emplace_back(glm::vec3(rando(rng), rando(rng), rando(rng)));
+				}
+			}
+			setImage(pixels);
+#endif // DEBUG
+
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, inputPixels.data());
 			glBindTexture(GL_TEXTURE_2D, texture);
 			ourShader.use();
@@ -255,6 +272,8 @@ private:
 			glfwWaitEventsTimeout(1.0);
 			glfwSwapBuffers(window);
 
+			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
         }
 
     }
