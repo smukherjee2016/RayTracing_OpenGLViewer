@@ -6,7 +6,7 @@ else()
     cmake_policy(VERSION 3.12)
 endif()
 
-project(RayTracing_OpenGLViewer VERSION 0.1.0)
+project(RayTracing_OpenGLViewer VERSION 0.2.0)
 
 
 
