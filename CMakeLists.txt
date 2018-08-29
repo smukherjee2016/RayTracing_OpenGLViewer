@@ -71,9 +71,9 @@ set(GLM_TEST_ENABLE OFF CACHE BOOL "")
 add_subdirectory("extern/glfw")
 add_subdirectory("extern/glm")
 
-include_directories("extern/glfw/include/")
-include_directories("extern/glad/include/")
-include_directories("extern/glm/")
+include_directories("${CMAKE_CURRENT_LIST_DIR}/extern/glfw/include/")
+include_directories("${CMAKE_CURRENT_LIST_DIR}/extern/glad/include/")
+include_directories("${CMAKE_CURRENT_LIST_DIR}/extern/glm/")
 
 set(GLAD "${CMAKE_CURRENT_LIST_DIR}/extern/glad/include/glad/glad.h"
 		 "${CMAKE_CURRENT_LIST_DIR}/extern/glad/include/KHR/khrplatform.h"
